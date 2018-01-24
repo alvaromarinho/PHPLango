@@ -96,7 +96,7 @@ class Maker
 			$html_td .= "\n\t\t\t\t\t\t<td><?= \$row->".$field->field.$format." ?></td>";
 		}
 		$html_th .= "\n\t\t\t\t\t\t<th>ACTION</th>";
-		$html_td .= "\n\t\t\t\t\t\t<td><?= Template::link('&#9998;', ROOT.'".$table."'.DS.'edit'.DS.\$row->id, ['class' => 'link mx-1', 'title' => 'Edit']); ?>\n\t\t\t\t\t\t\t<?= Template::link('&#10060;', null, [\n\t\t\t\t\t\t\t\t'title' 	  => 'Delete',\n\t\t\t\t\t\t\t\t'class' 	  => 'link mx-1',\n\t\t\t\t\t\t\t\t'data-title'  => 'Delete '.\$row->id.'?',\n\t\t\t\t\t\t\t\t'data-body'   => 'Do you want to delete the '.\$row->id.'?',\n\t\t\t\t\t\t\t\t'data-footer' => json_encode(array(\n\t\t\t\t\t\t\t\t\t'Delete' => ['class'=>'btn btn-danger','href'=> ROOT.'".$table."'.DS.'delete'.DS.\$row->id],\n\t\t\t\t\t\t\t\t\t'Cancel' => ['class'=>'btn btn-light', 'data-dismiss'=>'modal']\n\t\t\t\t\t\t\t\t))\n\t\t\t\t\t\t\t]); ?>\n\t\t\t\t\t\t</td>";
+		$html_td .= "\n\t\t\t\t\t\t<td><?= Template::link('&#9998;', ROOT.'".$table."'.DS.'edit'.DS.\$row->id, ['class' => 'link mx-1', 'title' => 'Edit']); ?>\n\t\t\t\t\t\t\t<?= Template::link('&#10060;', null, [\n\t\t\t\t\t\t\t\t'title' 	  => 'Delete',\n\t\t\t\t\t\t\t\t'class' 	  => 'link mx-1 delete',\n\t\t\t\t\t\t\t\t'data-title'  => 'Delete '.\$row->id.'?',\n\t\t\t\t\t\t\t\t'data-body'   => 'Do you want to delete the '.\$row->id.'?',\n\t\t\t\t\t\t\t\t'data-footer' => json_encode(array(\n\t\t\t\t\t\t\t\t\t'Delete' => ['class'=>'btn btn-danger','href'=> ROOT.'".$table."'.DS.'delete'.DS.\$row->id],\n\t\t\t\t\t\t\t\t\t'Cancel' => ['class'=>'btn btn-light', 'data-dismiss'=>'modal']\n\t\t\t\t\t\t\t\t))\n\t\t\t\t\t\t\t]); ?>\n\t\t\t\t\t\t</td>";
 		$html 	 .= "<div class='row'>\n\t<div class='col-12'>\n\t\t<div class='table-responsive'>\n\t\t\t<table class='table table-sm'>\n\t\t\t\t<thead class='thead-light'>\n\t\t\t\t\t<tr>".$html_th."\n\t\t\t\t\t</tr>\n\t\t\t\t</thead>\n\t\t\t\t<tbody>\n\t\t\t\t<?php foreach (\$".$table." as \$row) { ?>\n\t\t\t\t\t<tr>".$html_td."\n\t\t\t\t\t</tr>\n\t\t\t\t<?php } ?>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t</div>\n\t</div>\n</div>";
 		$this->html_index = $html;
 	}
@@ -109,7 +109,7 @@ class Maker
 	public function setHtmlCreate($model_name, $table, $arrayFields)
 	{
 		$count = 1;
-		$html  = "<?php require_once ELEMENTS.'message.php'; ?>\n<h1>New ".$model_name."</h1>\n<hr>\n<form method='post' action='<?= ROOT.'".$table."'.DS.\$_action.DS.\$_parameters ?>'>\n\t<div class='row'>";
+		$html  = "<?php require_once ELEMENTS.'message.php'; ?>\n<h1>New ".$model_name."</h1>\n<hr>\n<form method='post' action='<?= ROOT.'".$table."'.DS.\$_mvc->getAction().DS.\$_mvc->getParameters() ?>'>\n\t<div class='row'>";
 		foreach ($arrayFields as $field) {
 			$type_config = explode("(", $field->type); 			/* varchar(20) = array('varchar','20)') */ 
 			$type 		 = reset($type_config);					/* varchar */
