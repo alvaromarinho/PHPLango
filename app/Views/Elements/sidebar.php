@@ -1,0 +1,1 @@
+<li class='nav-item'><?= Template::link('Home', ROOT, ['class' => 'nav-link text-primary']); ?></li> 

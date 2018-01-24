@@ -1,0 +1,4 @@
+RewriteEngine on
+RewriteRule    ^maker.script maker.script.php [L]
+RewriteRule    ^$ public/    [L]
+RewriteRule    (.*) public/$1 [L]
