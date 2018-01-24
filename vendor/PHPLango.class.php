@@ -16,14 +16,14 @@ class PHPLango
 				if(in_array($_mvc->getAction(), get_class_methods($_mvc->getController()))) {
 					return array("status" => true);
 				} else
-					return array("status" => false, "title" => "Erro", "message" => "Não existe essa action no controller!");
+					return array("title" => "Erro", "message" => "Não existe essa action no controller!");
 			} else
-				return array("status" => false, "title" => "Erro 404", "message" => "Não foi possivel localizar o model!");
+				return array("title" => "Erro 404", "message" => "Não foi possivel localizar o model!");
 		} 
 		else if (empty($_url[2]))
-			require_once VIEWS."start.php";
+			return array("status" => false);
 		else
-			return array("status" => false, "title" => "Erro 404", "message" => "Não foi possivel localizar o controller!");
+			return array("title" => "Erro 404", "message" => "Não foi possivel localizar o controller!");
 	}
 
 	public static function redirect($_mvc, $_url)

@@ -20,8 +20,10 @@ $_url 	 = $_SERVER['REQUEST_URI'];
 $_result = PHPLango::checkUrl($_mvc, $_url);
 
 require_once VIEWS."header.php";
-if($_result['status'])
-	$_result = PHPLango::redirect($_mvc, $_url);
+if(isset($_result['status']) && $_result['status'])
+	PHPLango::redirect($_mvc, $_url);
+else if(isset($_result['status']) && !$_result['status'])
+	require_once VIEWS."start.php";
 else
 	require_once VIEWS."error.php";
 require_once VIEWS."footer.php";
