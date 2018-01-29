@@ -84,7 +84,7 @@ class Maker
 	{
 		$html_th = "";
 		$html_td = "";
-		$html 	 = "<?php require_once ELEMENTS.'message.php'; ?>\n<div class='row'>\n\t<div class='col-7'>\n\t\t<div class='form-group'>\n\t\t\t<?= Template::link('New', ROOT.'".$table."'.DS.'create', ['class' => 'btn btn-primary']); ?>\n\t\t</div>\n\t</div>\n\t<div class='col-2'>\n\t\t<div class='form-group'>\n\t\t\t<?= Template::select('num_rows', ['class' => 'form-control num-rows'], ['label' => false, 'options' => array('5' => '5', '10' => '10', '15' => '15')]); ?>\n\t\t</div>\n\t</div>\n\t<div class='col-3'>\n\t\t<div class='form-group'>\n\t\t\t<?= Template::input('Search', ['class' => 'form-control search-table', 'placeholder' => 'Search'], ['label' => false]); ?>\n\t\t</div>\n\t</div>\n</div>\n";
+		$html 	 = "<?php require_once VIEWS.'header.php'; ?>\n<?php require_once ELEMENTS.'message.php'; ?>\n<div class='row'>\n\t<div class='col-7'>\n\t\t<div class='form-group'>\n\t\t\t<?= Template::link('New', ROOT.'".$table."'.DS.'create', ['class' => 'btn btn-primary']); ?>\n\t\t</div>\n\t</div>\n\t<div class='col-2'>\n\t\t<div class='form-group'>\n\t\t\t<?= Template::select('num_rows', ['class' => 'form-control num-rows'], ['label' => false, 'options' => array('5' => '5', '10' => '10', '15' => '15')]); ?>\n\t\t</div>\n\t</div>\n\t<div class='col-3'>\n\t\t<div class='form-group'>\n\t\t\t<?= Template::input('Search', ['class' => 'form-control search-table', 'placeholder' => 'Search'], ['label' => false]); ?>\n\t\t</div>\n\t</div>\n</div>\n";
 		foreach ($arrayFields as $field) {
 			$html_th .= "\n\t\t\t\t\t\t<th>".strtoupper(str_replace("_", " ", $field->field))."</th>";
 			if($field->type == 'datetime')
@@ -97,7 +97,8 @@ class Maker
 		}
 		$html_th .= "\n\t\t\t\t\t\t<th>ACTION</th>";
 		$html_td .= "\n\t\t\t\t\t\t<td><?= Template::link('&#9998;', ROOT.'".$table."'.DS.'edit'.DS.\$row->id, ['class' => 'link mx-1', 'title' => 'Edit']); ?>\n\t\t\t\t\t\t\t<?= Template::link('&#10060;', null, [\n\t\t\t\t\t\t\t\t'title' 	  => 'Delete',\n\t\t\t\t\t\t\t\t'class' 	  => 'link mx-1 delete',\n\t\t\t\t\t\t\t\t'data-title'  => 'Delete '.\$row->id.'?',\n\t\t\t\t\t\t\t\t'data-body'   => 'Do you want to delete the '.\$row->id.'?',\n\t\t\t\t\t\t\t\t'data-footer' => json_encode(array(\n\t\t\t\t\t\t\t\t\t'Delete' => ['class'=>'btn btn-danger','href'=> ROOT.'".$table."'.DS.'delete'.DS.\$row->id],\n\t\t\t\t\t\t\t\t\t'Cancel' => ['class'=>'btn btn-light', 'data-dismiss'=>'modal']\n\t\t\t\t\t\t\t\t))\n\t\t\t\t\t\t\t]); ?>\n\t\t\t\t\t\t</td>";
-		$html 	 .= "<div class='row'>\n\t<div class='col-12'>\n\t\t<div class='table-responsive'>\n\t\t\t<table class='table table-sm'>\n\t\t\t\t<thead class='thead-light'>\n\t\t\t\t\t<tr>".$html_th."\n\t\t\t\t\t</tr>\n\t\t\t\t</thead>\n\t\t\t\t<tbody>\n\t\t\t\t<?php foreach (\$".$table." as \$row) { ?>\n\t\t\t\t\t<tr>".$html_td."\n\t\t\t\t\t</tr>\n\t\t\t\t<?php } ?>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t</div>\n\t</div>\n</div>";
+		$html 	 .= "<div class='row'>\n\t<div class='col-12'>\n\t\t<div class='table-responsive'>\n\t\t\t<table class='table table-sm'>\n\t\t\t\t<thead class='thead-light'>\n\t\t\t\t\t<tr>".$html_th."\n\t\t\t\t\t</tr>\n\t\t\t\t</thead>\n\t\t\t\t<tbody>\n\t\t\t\t<?php foreach (\$".$table." as \$row) { ?>\n\t\t\t\t\t<tr>".$html_td."\n\t\t\t\t\t</tr>\n\t\t\t\t<?php } ?>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t</div>\n\t</div>\n</div>\n";
+		$html 	 .= "<?php require_once VIEWS.'footer.php'; ?>";
 		$this->html_index = $html;
 	}
 
@@ -109,7 +110,7 @@ class Maker
 	public function setHtmlCreate($model_name, $table, $arrayFields)
 	{
 		$count = 1;
-		$html  = "<?php require_once ELEMENTS.'message.php'; ?>\n<h1>New ".$model_name."</h1>\n<hr>\n<form method='post' action='<?= ROOT.'".$table."'.DS.\$_mvc->getAction().DS.\$_mvc->getParameters() ?>'>\n\t<div class='row'>";
+		$html  = "<?php require_once VIEWS.'header.php'; ?>\n<?php require_once ELEMENTS.'message.php'; ?>\n<h1>New ".$model_name."</h1>\n<hr>\n<form method='post' action='<?= ROOT.'".$table."'.DS.\$_mvc->getAction().DS.\$_mvc->getParameters() ?>'>\n\t<div class='row'>";
 		foreach ($arrayFields as $field) {
 			$type_config = explode("(", $field->type); 			/* varchar(20) = array('varchar','20)') */ 
 			$type 		 = reset($type_config);					/* varchar */
@@ -151,7 +152,8 @@ class Maker
 				}
 			}
 		}
-		$html .= "\n\t</div>\n\t<hr>\n\t<div class='row'>\n\t\t<div class='col-12'>\n\t\t\t<div class='form-group'>\n\t\t\t\t<?= Template::button('Save', ['class' => 'btn btn-success']); ?>\n\t\t\t\t<?= Template::link('Back', ROOT.'".$table."', ['class' => 'btn btn-warning']); ?>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</form>";
+		$html .= "\n\t</div>\n\t<hr>\n\t<div class='row'>\n\t\t<div class='col-12'>\n\t\t\t<div class='form-group'>\n\t\t\t\t<?= Template::button('Save', ['class' => 'btn btn-success']); ?>\n\t\t\t\t<?= Template::link('Back', ROOT.'".$table."', ['class' => 'btn btn-warning']); ?>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</form>\n";
+		$html .= "<?php require_once VIEWS.'footer.php'; ?>";
 		$this->html_create = $html;
 	}	
 }
