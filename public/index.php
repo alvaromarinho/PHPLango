@@ -15,15 +15,13 @@ require_once "../vendor/PHPLango.class.php";
 require_once "../vendor/Template.class.php";
 require_once "../vendor/Mvc.php";
 
-$_mvc 	 = new Mvc();
-$_url 	 = $_SERVER['REQUEST_URI'];
-$_result = PHPLango::checkUrl($_mvc, $_url);
+$_mvc = new Mvc();
+$_url = explode("/", str_replace("/usuario/alvaro", "", $_SERVER['REQUEST_URI']));
 
-require_once VIEWS."header.php";
-if(isset($_result['status']) && $_result['status'])
-	PHPLango::redirect($_mvc, $_url);
-else if(isset($_result['status']) && !$_result['status'])
-	require_once VIEWS."start.php";
+if(PHPLango::checkUrl($_mvc, $_url))
+	if(empty($_url[2]))
+		require_once VIEWS."start.php";
+	else
+		PHPLango::redirect($_mvc, $_url);
 else
 	require_once VIEWS."error.php";
-require_once VIEWS."footer.php";
