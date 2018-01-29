@@ -4,31 +4,32 @@ class PHPLango
 {
 	public static function checkUrl($_mvc, $_url)
 	{
-		$_url = explode("/", $_url);
+		$_url = preg_replace("/[^\w]/", "", $_url);
+		if(empty($_url[2]) && $_url[1] == PROJECT)
+			return true;
+
 		$_mvc->setViewFolder(ActiveRecord\classify($_url[2]));
-		$_mvc->setModel(ActiveRecord\classify($_url[2], true));
+		$_mvc->setModel(ActiveRecord\classify(preg_replace("/[^\w]/", "", $_url[2]), true));
 		$_mvc->setController($_mvc->getViewFolder()."Controller");
 		$_mvc->setAction(isset($_url[3]) && !empty($_url[3]) ? $_url[3] : "index");
 
 		if (!empty($_mvc->getController()) && file_exists(CONTROLLERS.$_mvc->getController().".php") ) {
 			require_once CONTROLLERS.$_mvc->getController().".php";
 			if(file_exists(MODELS.$_mvc->getModel().".php")) {
-				if(in_array($_mvc->getAction(), get_class_methods($_mvc->getController()))) {
-					return array("status" => true);
+				if(in_array($_mvc->getAction(), get_class_methods($_mvc->getController()))){
+					return true;
 				} else
-					return array("title" => "Erro", "message" => "Não existe essa action no controller!");
+					$_SESSION["message"] = "Não existe essa action no controller!";
 			} else
-				return array("title" => "Erro 404", "message" => "Não foi possivel localizar o model!");
-		} 
-		else if (empty($_url[2]))
-			return array("status" => false);
-		else
-			return array("title" => "Erro 404", "message" => "Não foi possivel localizar o controller!");
+				$_SESSION["message"] = "Não foi possivel localizar o model!";
+		} else
+			$_SESSION["message"] = "Não foi possivel localizar o controller!";
+		$_SESSION["class"] = "danger";
+		return false;
 	}
 
 	public static function redirect($_mvc, $_url)
 	{
-		$_url = explode("/", $_url);
 		if(isset($_url[4]))
 			$_mvc->setParameters($_url[4]);
 
