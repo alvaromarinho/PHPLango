@@ -5,6 +5,8 @@ class PHPLango
 	public static function checkUrl($_mvc, $_url)
 	{
 		$_url = preg_replace("/[^\w]/", "", $_url);
+		if($_url[2] == 'logoff')
+			self::logoff();
 		if(empty($_url[2]) && $_url[1] == PROJECT)
 			return true;
 
@@ -16,9 +18,9 @@ class PHPLango
 		if (!empty($_mvc->getController()) && file_exists(CONTROLLERS.$_mvc->getController().".php") ) {
 			require_once CONTROLLERS.$_mvc->getController().".php";
 			if(file_exists(MODELS.$_mvc->getModel().".php")) {
-				if(in_array($_mvc->getAction(), get_class_methods($_mvc->getController()))){
+				if(in_array($_mvc->getAction(), get_class_methods($_mvc->getController())))
 					return true;
-				} else
+				else
 					$_SESSION["message"] = "Não existe essa action no controller!";
 			} else
 				$_SESSION["message"] = "Não foi possivel localizar o model!";
@@ -26,6 +28,35 @@ class PHPLango
 			$_SESSION["message"] = "Não foi possivel localizar o controller!";
 		$_SESSION["class"] = "danger";
 		return false;
+	}
+
+	public static function login()
+	{
+		if(isset($_SESSION['email']) && isset($_COOKIE['PHPLAP'])){
+			if(!empty(User::all(['conditions' => ['username = ? AND password = ?', $_SESSION['email'], $_COOKIE['PHPLAP']]])))
+				return true;
+			else
+				$_SESSION["message"] = "Authentication error occurred!";
+		} else if(!empty($_POST)) {
+			$user = User::all(['conditions' => ['username = ? AND password = ?', $_POST['username'], $_POST['password']]]);
+			if(!empty($user)){
+				$_SESSION['auth']  = true;
+				$_SESSION['email'] = $user->username;
+				setcookie('PHPLAP', $_POST['password'], time()+60*60*2);
+				return true;
+			} else 
+				$_SESSION["message"] = "Wrong username or password!";
+		}
+		$_SESSION["class"] = "danger";
+		return false;
+	}
+
+	public static function logoff()
+	{
+		unset($_SESSION['auth'], $_SESSION['email']);
+		setcookie('PHPLAU', '', 1);
+		setcookie('PHPLAP', '', 1);
+		header("location:".ROOT);
 	}
 
 	public static function redirect($_mvc, $_url)
