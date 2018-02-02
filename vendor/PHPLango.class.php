@@ -54,7 +54,6 @@ class PHPLango
 	public static function logoff()
 	{
 		unset($_SESSION['auth'], $_SESSION['email']);
-		setcookie('PHPLAU', '', 1);
 		setcookie('PHPLAP', '', 1);
 		header("location:".ROOT);
 	}
