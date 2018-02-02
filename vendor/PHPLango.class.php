@@ -6,7 +6,7 @@ class PHPLango
 	{
 		$_url = preg_replace("/[^\w]/", "", $_url);
 		if($_url[2] == 'logoff')
-			self::logoff();
+			Auth::logoff();
 		if(empty($_url[2]) && $_url[1] == PROJECT)
 			return true;
 
@@ -28,34 +28,6 @@ class PHPLango
 			$_SESSION["message"] = "Não foi possivel localizar o controller!";
 		$_SESSION["class"] = "danger";
 		return false;
-	}
-
-	public static function login()
-	{
-		if(isset($_SESSION['email']) && isset($_COOKIE['PHPLAP'])){
-			if(!empty(User::all(['conditions' => ['username = ? AND password = ?', $_SESSION['email'], $_COOKIE['PHPLAP']]])))
-				return true;
-			else
-				$_SESSION["message"] = "Authentication error occurred!";
-		} else if(!empty($_POST)) {
-			$user = User::all(['conditions' => ['username = ? AND password = ?', $_POST['username'], $_POST['password']]]);
-			if(!empty($user)){
-				$_SESSION['auth']  = true;
-				$_SESSION['email'] = $user->username;
-				setcookie('PHPLAP', $_POST['password'], time()+60*60*2);
-				return true;
-			} else 
-				$_SESSION["message"] = "Wrong username or password!";
-		}
-		$_SESSION["class"] = "danger";
-		return false;
-	}
-
-	public static function logoff()
-	{
-		unset($_SESSION['auth'], $_SESSION['email']);
-		setcookie('PHPLAP', '', 1);
-		header("location:".ROOT);
 	}
 
 	public static function redirect($_mvc, $_url)

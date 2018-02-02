@@ -12,15 +12,16 @@ date_default_timezone_set('America/Sao_Paulo');
 
 require_once "../vendor/path.php";
 require_once "../config.php";
+require_once "../vendor/Mvc.php";
 require_once "../vendor/PHPLango.class.php";
 require_once "../vendor/Template.class.php";
-require_once "../vendor/Mvc.php";
+require_once "../vendor/Auth.class.php";
 
 $_mvc = new Mvc();
-$_url = explode("/", str_replace("/usuario/alvaro", "", $_SERVER['REQUEST_URI']));
+$_url = explode("/", $_SERVER['REQUEST_URI']);
 
 if(PHPLango::checkUrl($_mvc, $_url))
-	if(PHPLango::login())
+	if(Auth::login())
 		if(empty($_url[2]))
 			require_once VIEWS."start.php";
 		else
