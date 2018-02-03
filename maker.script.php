@@ -3,6 +3,7 @@
 require_once "vendor/path.php";
 require_once "vendor/Maker.php";
 require_once "vendor/Template.class.php";
+require_once "vendor/Auth.class.php";
 require_once 'vendor/php-activerecord/ActiveRecord.php';
 
 error_reporting(E_ALL);
@@ -76,12 +77,28 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 				<div class="row my-3 mx-1">
 					<div class="col-12">
 						<div class="form-group row">
-							<label for="overwrite" class="col-3 font">Overwrite files:</label>
+							<label for="overwriteFiles" class="col-5 font">Overwrite files:</label>
 							<div class="col-2">
-								<select class="form-control" name="overwrite" id="overwrite">
+								<select class="form-control" name="overwriteFiles" id="overwriteFiles">
 									<option value="N">NO</option>
 									<option value="Y">YES</option>
 								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row my-3 mx-1">
+					<div class="col-12">
+						<div class="form-group row">
+							<label for="overwriteAdminPass" class="col-5 font">Overwrite ADMIN password:</label>
+							<div class="col-2">
+								<select class="form-control" name="overwriteAdminPass" id="overwriteAdminPass">
+									<option value="N">NO</option>
+									<option value="Y">YES</option>
+								</select>
+							</div>
+							<div class="col-5">
+								<input type="text" name="adminPass" class="form-control" placeholder="password">
 							</div>
 						</div>
 					</div>
@@ -150,7 +167,7 @@ if(!empty($_POST)){
 			'table'        => $table['name'],
 			'relationship' => $table_columns
 		);
-		if(!file_exists(CONTROLLERS.$controller_name.'.php') || $_POST['overwrite'] == 'Y') {
+		if(!file_exists(CONTROLLERS.$controller_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
 			$maker->setHtmlController($controller_config);
 			file_put_contents(CONTROLLERS.$controller_name.'.php', $maker->getHtmlController());
 			chmod(CONTROLLERS.$controller_name.'.php', $mod);
@@ -163,7 +180,7 @@ if(!empty($_POST)){
 			'relationship' => $relationship,
 			'null'         => $null
 		);
-		if(!file_exists(MODELS.$model_name.'.php') || $_POST['overwrite'] == 'Y') {
+		if(!file_exists(MODELS.$model_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
 			$maker->setHtmlModel($model_config);
 			file_put_contents(MODELS.$model_name.'.php', $maker->getHtmlModel());
 		}
@@ -180,14 +197,14 @@ if(!empty($_POST)){
 
 
 		/* index */
-		if(!file_exists(VIEWS.$view_folder_name.DS.'index.php') || $_POST['overwrite'] == 'Y') {
+		if(!file_exists(VIEWS.$view_folder_name.DS.'index.php') || $_POST['overwriteFiles'] == 'Y') {
 			$maker->setHtmlIndex($view_config);
 			file_put_contents(VIEWS.$view_folder_name.DS.'index.php', $maker->getHtmlIndex());
 			chmod(VIEWS.$view_folder_name.DS.'index.php', $mod);
 		}
 
 		/* create */
-		if(!file_exists(VIEWS.$view_folder_name.DS.'create.php') || $_POST['overwrite'] == 'Y') {
+		if(!file_exists(VIEWS.$view_folder_name.DS.'create.php') || $_POST['overwriteFiles'] == 'Y') {
 			$maker->setHtmlCreate($view_config);
 			file_put_contents(VIEWS.$view_folder_name.DS.'create.php', $maker->getHtmlCreate());
 			chmod(VIEWS.$view_folder_name.DS.'create.php', $mod);
@@ -211,6 +228,15 @@ if(!empty($_POST)){
 	/* SIDEBAR */
 	if(file_exists(VIEWS.'Elements'.DS.'sidebar.php'))
 		file_put_contents(VIEWS.'Elements'.DS.'sidebar.php', $sidebar);
+
+	$query  =  "SELECT id FROM users WHERE username = 'admin'";
+	$query  = $connection->query($query);
+	$result = $query->fetch_array(MYSQLI_ASSOC);
+
+	if($result && $_POST['overwriteAdminPass'] == 'Y') {
+		$query  =  "UPDATE users SET password = '".Auth::cryptPass($_POST['adminPass'])."' WHERE username = 'admin'";
+		$query  = $connection->query($query);
+	}
 
 	$connection->close();
 	header("location:".ROOT);
