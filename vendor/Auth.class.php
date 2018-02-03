@@ -4,7 +4,9 @@ class Auth
 {
 	public static function login()
 	{
-		if(isset($_SESSION['email']) && isset($_COOKIE['PHPLAP'])){
+		if(!class_exists('User') && !empty($_POST)){
+			$_SESSION["message"] = "Model Users not found!";
+		} else if(isset($_SESSION['email']) && isset($_COOKIE['PHPLAP'])){
 			$user = User::first(['conditions' => ['username = ?', $_SESSION['email']] ]);
 			if($user->password == hex2bin($_COOKIE['PHPLAP']))
 				return true;

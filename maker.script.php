@@ -108,7 +108,9 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 		<script src="<?= JS.'bootstrap.min.js' ?>"></script>
 	</body>
 </html>
+
 <?php 
+
 if(!empty($_POST)){
 	foreach ($tables as $table) {
 		$query    = "SELECT 
@@ -127,6 +129,7 @@ if(!empty($_POST)){
 		$controller_name  = ActiveRecord\classify($table['name']).'Controller';
 		$model_name       = ActiveRecord\classify($table['name'], true);
 		$view_folder_name = ActiveRecord\classify($table['name']);
+
 		foreach ($describe as $key => $field){
 			if(empty($field->default) && $field->null == "NO" && $field->field != "id")
 				$null[] = $field->field;
@@ -139,45 +142,57 @@ if(!empty($_POST)){
 				$describe[$key]->type  = "enum('\$".$table_name."')";
 			}
 		}
+
+		/* CONTROLLER */
 		$controller_config = array(
 			'name'         => $controller_name,
 			'model'        => $model_name,
 			'table'        => $table['name'],
 			'relationship' => $table_columns
 		);
-		/* CONTROLLER */
 		if(!file_exists(CONTROLLERS.$controller_name.'.php') || $_POST['overwrite'] == 'Y') {
 			$maker->setHtmlController($controller_config);
 			file_put_contents(CONTROLLERS.$controller_name.'.php', $maker->getHtmlController());
 			chmod(CONTROLLERS.$controller_name.'.php', $mod);
 		}
+
+		/* MODEL */
 		$relationship = json_decode($table['relationship'], true);
 		$model_config = array(
 			'name'         => $model_name,
 			'relationship' => $relationship,
 			'null'         => $null
 		);
-		/* MODEL */
 		if(!file_exists(MODELS.$model_name.'.php') || $_POST['overwrite'] == 'Y') {
 			$maker->setHtmlModel($model_config);
 			file_put_contents(MODELS.$model_name.'.php', $maker->getHtmlModel());
 		}
+
 		/* VIEW */
+		$view_config = array(
+			'columns' => $describe,
+			'model'   => $model_name,
+			'table'   => $table['name'],
+		);
 		if(!is_dir(VIEWS.$view_folder_name))
 			mkdir(VIEWS.$view_folder_name, $mod);
 		chmod(VIEWS.$view_folder_name, $mod);
+
+
 		/* index */
 		if(!file_exists(VIEWS.$view_folder_name.DS.'index.php') || $_POST['overwrite'] == 'Y') {
-			$maker->setHtmlIndex($table['name'], $describe);
+			$maker->setHtmlIndex($view_config);
 			file_put_contents(VIEWS.$view_folder_name.DS.'index.php', $maker->getHtmlIndex());
 			chmod(VIEWS.$view_folder_name.DS.'index.php', $mod);
 		}
+
 		/* create */
 		if(!file_exists(VIEWS.$view_folder_name.DS.'create.php') || $_POST['overwrite'] == 'Y') {
-			$maker->setHtmlCreate($model_name, $table['name'], $describe);
+			$maker->setHtmlCreate($view_config);
 			file_put_contents(VIEWS.$view_folder_name.DS.'create.php', $maker->getHtmlCreate());
 			chmod(VIEWS.$view_folder_name.DS.'create.php', $mod);
 		}
+
 		$maker->setHtmlSidebar($table['name']);
 		$sidebar .= $maker->getHtmlSidebar();
 
@@ -192,9 +207,11 @@ if(!empty($_POST)){
 		if(file_exists(MODELS.'empty'))
 			unlink(MODELS.'empty');
 	}
+
 	/* SIDEBAR */
 	if(file_exists(VIEWS.'Elements'.DS.'sidebar.php'))
 		file_put_contents(VIEWS.'Elements'.DS.'sidebar.php', $sidebar);
+
 	$connection->close();
 	header("location:".ROOT);
 } 
