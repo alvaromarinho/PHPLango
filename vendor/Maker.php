@@ -116,7 +116,10 @@ class Maker
 	public function setHtmlCreate($config)
 	{
 		$count = 1;
-		$html  = "<?php require_once VIEWS.'header.php'; ?>\n<?php require_once ELEMENTS.'message.php'; ?>\n<h1>New ".$config['model']."</h1>\n<hr>\n<form method='post' action='<?= ROOT.'".$config['table']."'.DS.\$_mvc->getAction().DS.\$_mvc->getParameters() ?>'>\n\t<div class='row'>";
+		$html  = "
+
+		<?php require_once VIEWS.'header.php'; ?>\n
+		<?php require_once ELEMENTS.'message.php'; ?>\n<?= '<h1>'.ucfirst(\$_mvc->getAction()).' ".$config['model']."</h1>' ?>\n<hr>\n<form method='post' action='<?= ROOT.'".$config['table']."'.DS.\$_mvc->getAction().DS.\$_mvc->getParameters() ?>'>\n\t<div class='row'>";
 		foreach ($config['columns'] as $field) {
 			$type_config = explode("(", $field->type); 			/* varchar(20) = array('varchar','20)') */ 
 			$type 		 = reset($type_config);					/* varchar */
