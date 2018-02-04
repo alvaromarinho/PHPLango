@@ -69,11 +69,13 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 				</div>
 			</div>
 
-			<div class="row m-3">
-				<?php foreach ($tables as $table) { echo "<div class='col-2 border px-3 py-2'>".ucwords($table['name'])."</div>"; } ?>
-			</div>
-					
 			<form method="post" action="">
+				<div class="row m-3">
+					<?php foreach ($tables as $table) { 
+						echo "<div class='col-2 border px-3 py-2'><input type='checkbox' name='".$table['name']."' checked>".ucwords($table['name'])."</div>"; 
+					} ?>
+				</div>
+					
 				<div class="row my-3 mx-1">
 					<div class="col-12">
 						<div class="form-group row">
@@ -130,99 +132,101 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 
 if(!empty($_POST)){
 	foreach ($tables as $table) {
-		$query    = "SELECT 
-						column_name     AS 'field', 
-						column_default  AS 'default', 
-						is_nullable     AS 'null',  
-						column_type     AS 'type', 
-						column_key      AS 'key', 
-						column_comment  AS 'comment'
-					FROM information_schema.columns 
-					WHERE table_name = '".$table['name']."' AND table_schema = SCHEMA()";
-		$query  = $connection->query($query);
-		while ($result = $query->fetch_array(MYSQLI_ASSOC))
-			$describe[] = (object) $result;
-		
-		$controller_name  = ActiveRecord\classify($table['name']).'Controller';
-		$model_name       = ActiveRecord\classify($table['name'], true);
-		$view_folder_name = ActiveRecord\classify($table['name']);
+		if(isset($_POST[$table['name']])) {
+			$query    = "SELECT 
+							column_name     AS 'field', 
+							column_default  AS 'default', 
+							is_nullable     AS 'null',  
+							column_type     AS 'type', 
+							column_key      AS 'key', 
+							column_comment  AS 'comment'
+						FROM information_schema.columns 
+						WHERE table_name = '".$table['name']."' AND table_schema = SCHEMA()";
+			$query  = $connection->query($query);
+			while ($result = $query->fetch_array(MYSQLI_ASSOC))
+				$describe[] = (object) $result;
+			
+			$controller_name  = ActiveRecord\classify($table['name']).'Controller';
+			$model_name       = ActiveRecord\classify($table['name'], true);
+			$view_folder_name = ActiveRecord\classify($table['name']);
 
-		foreach ($describe as $key => $field){
-			if(empty($field->default) && $field->null == "NO" && $field->field != "id")
-				$null[] = $field->field;
-			if($field->key == "MUL"){
-				$array_table_name = explode("_", $field->field);
-				unset($array_table_name[count($array_table_name)-1]);               
-				$table_name = ActiveRecord\Utils::pluralize(implode("_", $array_table_name));
-				$table_columns[$table_name] = $field->comment;
-				$describe[$key]->key   = "";
-				$describe[$key]->type  = "enum('\$".$table_name."')";
+			foreach ($describe as $key => $field){
+				if(empty($field->default) && $field->null == "NO" && $field->field != "id")
+					$null[] = $field->field;
+				if($field->key == "MUL"){
+					$array_table_name = explode("_", $field->field);
+					unset($array_table_name[count($array_table_name)-1]);               
+					$table_name = ActiveRecord\Utils::pluralize(implode("_", $array_table_name));
+					$table_columns[$table_name] = $field->comment;
+					$describe[$key]->key   = "";
+					$describe[$key]->type  = "enum('\$".$table_name."')";
+				}
 			}
+
+			/* CONTROLLER */
+			$controller_config = array(
+				'name'         => $controller_name,
+				'model'        => $model_name,
+				'table'        => $table['name'],
+				'relationship' => $table_columns
+			);
+			if(!file_exists(CONTROLLERS.$controller_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
+				$maker->setHtmlController($controller_config);
+				file_put_contents(CONTROLLERS.$controller_name.'.php', $maker->getHtmlController());
+				chmod(CONTROLLERS.$controller_name.'.php', $mod);
+			}
+
+			/* MODEL */
+			$relationship = json_decode($table['relationship'], true);
+			$model_config = array(
+				'name'         => $model_name,
+				'relationship' => $relationship,
+				'null'         => $null
+			);
+			if(!file_exists(MODELS.$model_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
+				$maker->setHtmlModel($model_config);
+				file_put_contents(MODELS.$model_name.'.php', $maker->getHtmlModel());
+			}
+
+			/* VIEW */
+			$view_config = array(
+				'columns' => $describe,
+				'model'   => $model_name,
+				'table'   => $table['name'],
+			);
+			if(!is_dir(VIEWS.$view_folder_name))
+				mkdir(VIEWS.$view_folder_name, $mod);
+			chmod(VIEWS.$view_folder_name, $mod);
+
+
+			/* index */
+			if(!file_exists(VIEWS.$view_folder_name.DS.'index.php') || $_POST['overwriteFiles'] == 'Y') {
+				$maker->setHtmlIndex($view_config);
+				file_put_contents(VIEWS.$view_folder_name.DS.'index.php', $maker->getHtmlIndex());
+				chmod(VIEWS.$view_folder_name.DS.'index.php', $mod);
+			}
+
+			/* create */
+			if(!file_exists(VIEWS.$view_folder_name.DS.'create.php') || $_POST['overwriteFiles'] == 'Y') {
+				$maker->setHtmlCreate($view_config);
+				file_put_contents(VIEWS.$view_folder_name.DS.'create.php', $maker->getHtmlCreate());
+				chmod(VIEWS.$view_folder_name.DS.'create.php', $mod);
+			}
+
+			$maker->setHtmlSidebar($table['name']);
+			$sidebar .= $maker->getHtmlSidebar();
+
+			/* CLEAN ARRAYS */
+			$describe           = array();
+			$table_columns      = array();
+			$null               = array();
+			
+			/* DELETING EMPTY FILES */
+			if(file_exists(CONTROLLERS.'empty'))
+				unlink(CONTROLLERS.'empty');
+			if(file_exists(MODELS.'empty'))
+				unlink(MODELS.'empty');
 		}
-
-		/* CONTROLLER */
-		$controller_config = array(
-			'name'         => $controller_name,
-			'model'        => $model_name,
-			'table'        => $table['name'],
-			'relationship' => $table_columns
-		);
-		if(!file_exists(CONTROLLERS.$controller_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
-			$maker->setHtmlController($controller_config);
-			file_put_contents(CONTROLLERS.$controller_name.'.php', $maker->getHtmlController());
-			chmod(CONTROLLERS.$controller_name.'.php', $mod);
-		}
-
-		/* MODEL */
-		$relationship = json_decode($table['relationship'], true);
-		$model_config = array(
-			'name'         => $model_name,
-			'relationship' => $relationship,
-			'null'         => $null
-		);
-		if(!file_exists(MODELS.$model_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
-			$maker->setHtmlModel($model_config);
-			file_put_contents(MODELS.$model_name.'.php', $maker->getHtmlModel());
-		}
-
-		/* VIEW */
-		$view_config = array(
-			'columns' => $describe,
-			'model'   => $model_name,
-			'table'   => $table['name'],
-		);
-		if(!is_dir(VIEWS.$view_folder_name))
-			mkdir(VIEWS.$view_folder_name, $mod);
-		chmod(VIEWS.$view_folder_name, $mod);
-
-
-		/* index */
-		if(!file_exists(VIEWS.$view_folder_name.DS.'index.php') || $_POST['overwriteFiles'] == 'Y') {
-			$maker->setHtmlIndex($view_config);
-			file_put_contents(VIEWS.$view_folder_name.DS.'index.php', $maker->getHtmlIndex());
-			chmod(VIEWS.$view_folder_name.DS.'index.php', $mod);
-		}
-
-		/* create */
-		if(!file_exists(VIEWS.$view_folder_name.DS.'create.php') || $_POST['overwriteFiles'] == 'Y') {
-			$maker->setHtmlCreate($view_config);
-			file_put_contents(VIEWS.$view_folder_name.DS.'create.php', $maker->getHtmlCreate());
-			chmod(VIEWS.$view_folder_name.DS.'create.php', $mod);
-		}
-
-		$maker->setHtmlSidebar($table['name']);
-		$sidebar .= $maker->getHtmlSidebar();
-
-		/* CLEAN ARRAYS */
-		$describe           = array();
-		$table_columns      = array();
-		$null               = array();
-		
-		/* DELETING EMPTY FILES */
-		if(file_exists(CONTROLLERS.'empty'))
-			unlink(CONTROLLERS.'empty');
-		if(file_exists(MODELS.'empty'))
-			unlink(MODELS.'empty');
 	}
 
 	/* SIDEBAR */
