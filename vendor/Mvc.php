@@ -8,6 +8,24 @@ class Mvc
 	private $_controller;
 	private $_action;
 	private $_parameters;
+	static private $_instance;
+
+	/* Construtor do tipo protegido previne que uma nova instância da Classe seja criada através do operador `new` de fora dessa classe. */
+	protected function __construct(){}
+
+	/* Método clone do tipo privado previne a clonagem dessa instância da classe */
+	private function __clone(){}
+
+	/* Método unserialize do tipo privado para prevenir a desserialização */
+	private function __wakeup(){}
+
+	public static function getInstance()
+	{
+		if (!isset(self::$_instance)){
+			self::$_instance = new Mvc();
+		}
+		return self::$_instance;
+	}
 
 	public function getViewFolder()
 	{
