@@ -58,9 +58,14 @@ class Template
 	private static function _array_option($array_obj)
 	{
 		$array = array();
-		foreach ($array_obj as $obj)
-			if(count($obj->attributes()) == 2)
-				$array[reset($obj->attributes())] = end($obj->attributes());
+		foreach ($array_obj as $obj){
+			$html = $obj->attributes();
+			if(count($html) == 2){
+				$key   = reset($html);
+				$value = end($html);
+				$array[$key] = $value;
+			}
+		}
 		return $array;
 	}
 
@@ -196,7 +201,7 @@ class Template
 		$attr      = $attr ?: self::$link_attr;
 		$html_attr = self::_attributes($attr);
 		$href	   = $href ?: '#';
-		$html 	   = $html_label."<a href='".$href."' ".$html_attr.">".ucwords(str_replace("_", " ", $label))."</a>";
+		$html 	   = "<a href='".$href."' ".$html_attr.">".ucwords(str_replace("_", " ", $label))."</a>";
 		return $html;
 	}
 
@@ -210,7 +215,7 @@ class Template
 	{
 		$attr      = $attr ?: self::$button_attr;
 		$html_attr = self::_attributes($attr);
-		$html 	   = $html_label."<button ".$html_attr.">".ucwords(str_replace("_", " ", $label))."</button>";
+		$html 	   = "<button ".$html_attr.">".ucwords(str_replace("_", " ", $label))."</button>";
 		return $html;
 	}
 }

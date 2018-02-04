@@ -1,7 +1,9 @@
 <?php 
 
+$arrayDir = explode(DIRECTORY_SEPARATOR, dirname(__DIR__));
+
 define('DS', DIRECTORY_SEPARATOR);
-define('PROJECT', end(explode(DS, dirname(__DIR__))));
+define('PROJECT', end($arrayDir));
 define('PROTOCOL', isset($_SERVER['HTTPS']) ? 'https:'.DS.DS:'http:'.DS.DS);
 
 define('SERVER', PROTOCOL.substr($_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'], 0, strpos($_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'], PROJECT)-1));
