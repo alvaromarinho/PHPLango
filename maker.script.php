@@ -11,7 +11,7 @@ ini_set("display_errors", 1);
 
 $user       = 'root';
 $password   = '';
-$database   = 'phplango';
+$database   = 'blog';
 $server     = 'localhost';
 
 $maker 		= new Maker();
@@ -132,37 +132,43 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 
 if(!empty($_POST)){
 	foreach ($tables as $table) {
-		if(isset($_POST[$table['name']])) {
-			$query    = "SELECT 
-							column_name     AS 'field', 
-							column_default  AS 'default', 
-							is_nullable     AS 'null',  
-							column_type     AS 'type', 
-							column_key      AS 'key', 
-							column_comment  AS 'comment'
-						FROM information_schema.columns 
-						WHERE table_name = '".$table['name']."' AND table_schema = SCHEMA()";
-			$query  = $connection->query($query);
-			while ($result = $query->fetch_array(MYSQLI_ASSOC))
-				$describe[] = (object) $result;
-			
-			$controller_name  = ActiveRecord\classify($table['name']).'Controller';
-			$model_name       = ActiveRecord\classify($table['name'], true);
-			$view_folder_name = ActiveRecord\classify($table['name']);
 
-			foreach ($describe as $key => $field){
-				if(empty($field->default) && $field->null == "NO" && $field->field != "id")
-					$null[] = $field->field;
-				if($field->key == "MUL"){
-					$array_table_name = explode("_", $field->field);
-					unset($array_table_name[count($array_table_name)-1]);               
-					$table_name = ActiveRecord\Utils::pluralize(implode("_", $array_table_name));
-					$table_columns[$table_name] = $field->comment;
-					$describe[$key]->key   = "";
-					$describe[$key]->type  = "enum('\$".$table_name."')";
-				}
+		/* VARIABLES */
+		$describe      = array();
+		$table_columns = array();
+		$null          = array();
+
+		$query    = "SELECT 
+						column_name     AS 'field', 
+						column_default  AS 'default', 
+						is_nullable     AS 'null',  
+						column_type     AS 'type', 
+						column_key      AS 'key', 
+						column_comment  AS 'comment'
+					FROM information_schema.columns 
+					WHERE table_name = '".$table['name']."' AND table_schema = SCHEMA()";
+		$query  = $connection->query($query);
+		while ($result = $query->fetch_array(MYSQLI_ASSOC))
+			$describe[] = (object) $result;
+		
+		$controller_name  = ActiveRecord\classify($table['name']).'Controller';
+		$model_name       = ActiveRecord\classify($table['name'], true);
+		$view_folder_name = ActiveRecord\classify($table['name']);
+
+		foreach ($describe as $key => $field){
+			if(empty($field->default) && $field->null == "NO" && $field->field != "id")
+				$null[] = $field->field;
+			if($field->key == "MUL"){
+				$array_table_name = explode("_", $field->field);
+				unset($array_table_name[count($array_table_name)-1]);               
+				$table_name = ActiveRecord\Utils::pluralize(implode("_", $array_table_name));
+				$table_columns[$table_name] = $field->comment;
+				$describe[$key]->key   = "";
+				$describe[$key]->type  = "enum('\$".$table_name."')";
 			}
+		}
 
+		if(isset($_POST[$table['name']])) {
 			/* CONTROLLER */
 			$controller_config = array(
 				'name'         => $controller_name,
@@ -176,18 +182,6 @@ if(!empty($_POST)){
 				chmod(CONTROLLERS.$controller_name.'.php', $mod);
 			}
 
-			/* MODEL */
-			$relationship = json_decode($table['relationship'], true);
-			$model_config = array(
-				'name'         => $model_name,
-				'relationship' => $relationship,
-				'null'         => $null
-			);
-			if(!file_exists(MODELS.$model_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
-				$maker->setHtmlModel($model_config);
-				file_put_contents(MODELS.$model_name.'.php', $maker->getHtmlModel());
-			}
-
 			/* VIEW */
 			$view_config = array(
 				'columns' => $describe,
@@ -197,7 +191,6 @@ if(!empty($_POST)){
 			if(!is_dir(VIEWS.$view_folder_name))
 				mkdir(VIEWS.$view_folder_name, $mod);
 			chmod(VIEWS.$view_folder_name, $mod);
-
 
 			/* index */
 			if(!file_exists(VIEWS.$view_folder_name.DS.'index.php') || $_POST['overwriteFiles'] == 'Y') {
@@ -215,18 +208,25 @@ if(!empty($_POST)){
 
 			$maker->setHtmlSidebar($table['name']);
 			$sidebar .= $maker->getHtmlSidebar();
-
-			/* CLEAN ARRAYS */
-			$describe           = array();
-			$table_columns      = array();
-			$null               = array();
-			
-			/* DELETING EMPTY FILES */
-			if(file_exists(CONTROLLERS.'empty'))
-				unlink(CONTROLLERS.'empty');
-			if(file_exists(MODELS.'empty'))
-				unlink(MODELS.'empty');
 		}
+
+		/* MODEL */
+		$relationship = json_decode($table['relationship'], true) ?: array();
+		$model_config = array(
+			'name'         => $model_name,
+			'relationship' => $relationship,
+			'null'         => $null
+		);
+		if(!file_exists(MODELS.$model_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
+			$maker->setHtmlModel($model_config);
+			file_put_contents(MODELS.$model_name.'.php', $maker->getHtmlModel());
+		}
+		
+		/* DELETING EMPTY FILES */
+		if(file_exists(CONTROLLERS.'empty'))
+			unlink(CONTROLLERS.'empty');
+		if(file_exists(MODELS.'empty'))
+			unlink(MODELS.'empty');
 	}
 
 	/* SIDEBAR */

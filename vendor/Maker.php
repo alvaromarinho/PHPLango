@@ -52,7 +52,7 @@ class Maker
 
 	public function setHtmlModel($config)
 	{
-		$html = "<?php \n\nclass ".$config['name']." extends ActiveRecord\Model\n{\n\t";
+		$html = "";
 		foreach ($config['relationship'] as $type => $tables) {
 			$array = "";
 			$html .= "static \$".$type." = array(";
@@ -67,7 +67,10 @@ class Maker
 				$html .= "\n\t\tarray('".$field."', 'message' => 'can\'t be blank or empty'),";
 			$html = substr($html, 0, -1);
 		}
-		$html .= "\n\t);\n}";
+		if(empty($html))
+			$html = "<?php \n\nclass ".$config['name']." extends ActiveRecord\Model\n{\n\t\n}";
+		else
+			$html = "<?php \n\nclass ".$config['name']." extends ActiveRecord\Model\n{\n\t".$html."\n\t);\n}";
 		$this->html_model = $html;
 	}
 
