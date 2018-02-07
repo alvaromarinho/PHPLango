@@ -123,7 +123,7 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 			</div>
 		</footer>
 
-		<script src="<?= JS.'jquery-3.2.1.slim.min.js' ?>"></script>
+		<script src="<?= JS.'jquery-3.3.1.min.js' ?>"></script>
 		<script src="<?= JS.'bootstrap.min.js' ?>"></script>
 	</body>
 </html>

@@ -6,7 +6,7 @@
             <span class="text-light">Copyright &copy; Alvin Kalango - 2017.</span>
         </div>
     </footer>
-    <script src="<?= JS.'jquery-3.2.1.slim.min.js' ?>"></script>
+    <script src="<?= JS.'jquery-3.3.1.min.js' ?>"></script>
     <script src="<?= JS.'bootstrap.min.js' ?>"></script>
     <script src="<?= JS.'PHPLango.js' ?>"></script>
     <script src="<?= JS.'app.js' ?>"></script>
