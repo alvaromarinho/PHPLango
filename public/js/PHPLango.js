@@ -3,9 +3,11 @@ $.fn.Lmodal = function(args) {
 	var defaults = {
 		modal: null,
 		style: 'light',
+		lg: null,
 		title: 'Aguarde',
 		body: 'Carregando...',
-		footer: '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>'
+		footer: '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+		html: null
 	}
 	settings = $.extend(defaults, args);
 	if(settings.modal != null){
@@ -13,7 +15,23 @@ $.fn.Lmodal = function(args) {
 		text  = (settings.style == 'warning' || settings.style == 'secondary' || settings.style == 'light') ? 'text-dark' : 'text-white';
 		modal.find('.modal-header').attr('class','modal-header '+ text +' bg-'+ settings.style);
 		modal.find('.modal-title').html(settings.title);
-		modal.find('.modal-body').html(settings.body);
+
+		if(settings.html != null) {
+			$.ajax({
+				url: settings.html,
+				success: function(html){
+					modal.find('.modal-body').html(html);
+				}
+			});
+		} else {
+			modal.find('.modal-body').html(settings.body);
+		}
+
+		if(settings.lg != null) {
+			modal.find('.modal-dialog').attr('class', 'modal-dialog modal-lg');
+		} else {
+			modal.find('.modal-dialog').attr('class', 'modal-dialog');
+		}
 
 		footer = '';
 		if($.isPlainObject(settings.footer))
