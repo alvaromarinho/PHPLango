@@ -201,7 +201,7 @@ class Template
 		$attr      = $attr ?: self::$link_attr;
 		$html_attr = self::_attributes($attr);
 		$href	   = $href ?: '#';
-		$html 	   = "<a href='".$href."' ".$html_attr.">".ucwords(str_replace("_", " ", $label))."</a>";
+		$html 	   = "<a href='".$href."' ".$html_attr.">".$label."</a>";
 		return $html;
 	}
 
@@ -215,7 +215,7 @@ class Template
 	{
 		$attr      = $attr ?: self::$button_attr;
 		$html_attr = self::_attributes($attr);
-		$html 	   = "<button ".$html_attr.">".ucwords(str_replace("_", " ", $label))."</button>";
+		$html 	   = "<button ".$html_attr.">".$label."</button>";
 		return $html;
 	}
 }
