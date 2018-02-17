@@ -107,7 +107,7 @@ class Template
 			$options = self::_array_option($options);
 
 		foreach ($options as $key => $value) {
-			if(is_array($config['selected']) && isset($config['selected']))
+			if(isset($config['selected']) && is_array($config['selected']))
 				foreach ($config['selected'] as $sel) 
 					if($sel->tag_id == $key){
 						$selected = 'selected';
