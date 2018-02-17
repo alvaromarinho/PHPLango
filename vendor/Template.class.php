@@ -107,7 +107,15 @@ class Template
 			$options = self::_array_option($options);
 
 		foreach ($options as $key => $value) {
-			$selected = (isset($config['selected']) && $config['selected'] == $key) ? 'selected' : '';
+			if(is_array($config['selected']) && isset($config['selected']))
+				foreach ($config['selected'] as $sel) 
+					if($sel->tag_id == $key){
+						$selected = 'selected';
+						break;
+					} else
+						$selected = '';
+			else 
+				$selected = (isset($config['selected']) && $config['selected'] == $key) ? 'selected' : '';
 			$html 	 .= "<option value='".$key."'".$selected.">".$value."</option>";
 		}
 		$html .= "</select>";
