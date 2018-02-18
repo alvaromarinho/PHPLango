@@ -108,15 +108,26 @@ class Template
 
 		foreach ($options as $key => $value) {
 			if(isset($config['selected']) && is_array($config['selected']))
-				foreach ($config['selected'] as $sel) 
-					if($sel->tag_id == $key){
+				foreach ($config['selected'] as $sel)
+					if($sel == $key){
 						$selected = 'selected';
 						break;
 					} else
 						$selected = '';
 			else 
 				$selected = (isset($config['selected']) && $config['selected'] == $key) ? 'selected' : '';
-			$html 	 .= "<option value='".$key."'".$selected.">".$value."</option>";
+
+			if(isset($config['disabled']))
+				foreach ($config['disabled'] as $dis)
+					if($dis == $key){
+						$disabled = 'disabled';
+						break;
+					} else
+						$disabled = '';
+			else 
+				$disabled = (isset($config['disabled']) && $config['disabled'] == $key) ? 'disabled' : '';
+
+			$html 	 .= "<option value='".$key."' ".$selected." ".$disabled.">".$value."</option>";
 		}
 		$html .= "</select>";
 		return $html;
@@ -135,7 +146,7 @@ class Template
 		$config     = $config ?: self::$textarea_config;
 		$html_label = self::_label($name, $config['label']);
 		$html_attr  = self::_attributes($attr);
-		$value 	    = $config['value'] ?: '';
+		$value 	    = isset($config['value']) ? $config['value'] : '';
 		$html 	    = $html_label."<textarea ".$html_attr." id='".$name."' name='".$name."'>".$value."</textarea>";
 		return $html;
 	}
