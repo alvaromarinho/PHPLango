@@ -41,6 +41,16 @@ class Table
 	public $sequence;
 
 	/**
+	 * Whether to cache individual models or not (not to be confused with caching of table schemas).
+	 */
+	public $cache_individual_model;
+
+	/**
+	 * Expiration period for model caching.
+	 */
+	public $cache_model_expire;
+
+	/**
 	 * A instance of CallBack for this model/table
 	 * @static
 	 * @var object ActiveRecord\CallBack
@@ -77,15 +87,13 @@ class Table
 	{
 		$this->class = Reflections::instance()->add($class_name)->get($class_name);
 
-		// if connection name property is null the connection manager will use the default connection
-		$connection = $this->class->getStaticPropertyValue('connection',null);
-
-		$this->conn = ConnectionManager::get_connection($connection);
+		$this->reestablish_connection(false);
 		$this->set_table_name();
 		$this->get_meta_data();
 		$this->set_primary_key();
 		$this->set_sequence_name();
 		$this->set_delegates();
+		$this->set_cache();
 		$this->set_setters_and_getters();
 
 		$this->callback = new CallBack($class_name);
@@ -93,12 +101,24 @@ class Table
 		$this->callback->register('after_save', function(Model $model) { $model->reset_dirty(); }, array('prepend' => true));
 	}
 
+	public function reestablish_connection($close=true)
+	{
+		// if connection name property is null the connection manager will use the default connection
+		$connection = $this->class->getStaticPropertyValue('connection',null);
+
+		if ($close)
+		{
+			ConnectionManager::drop_connection($connection);
+			static::clear_cache();
+		}
+		return ($this->conn = ConnectionManager::get_connection($connection));
+	}
+
 	public function create_joins($joins)
 	{
 		if (!is_array($joins))
 			return $joins;
 
-		$self = $this->table;
 		$ret = $space = '';
 
 		$existing_tables = array();
@@ -199,6 +219,15 @@ class Table
 		return $this->find_by_sql($sql->to_s(),$sql->get_where_values(), $readonly, $eager_load);
 	}
 
+	public function cache_key_for_model($pk)
+	{
+		if (is_array($pk))
+		{
+			$pk = implode('-', $pk);
+		}
+		return $this->class->name . '-' . $pk;
+	}
+
 	public function find_by_sql($sql, $values=null, $readonly=false, $includes=null)
 	{
 		$this->last_sql = $sql;
@@ -207,9 +236,22 @@ class Table
 		$list = $attrs = array();
 		$sth = $this->conn->query($sql,$this->process_data($values));
 
+		$self = $this;
 		while (($row = $sth->fetch()))
 		{
-			$model = new $this->class->name($row,false,true,false);
+			$cb = function() use ($row, $self)
+			{
+				return new $self->class->name($row, false, true, false);
+			};
+			if ($this->cache_individual_model)
+			{
+				$key = $this->cache_key_for_model(array_intersect_key($row, array_flip($this->pk)));
+				$model = Cache::get($key, $cb, $this->cache_model_expire);
+			}
+			else
+			{
+				$model = $cb();
+			}
 
 			if ($readonly)
 				$model->readonly();
@@ -244,7 +286,7 @@ class Table
 			// nested include
 			if (is_array($name))
 			{
-				$nested_includes = count($name) > 1 ? $name : $name[0];
+				$nested_includes = count($name) > 0 ? $name : array();
 				$name = $index;
 			}
 			else
@@ -282,7 +324,7 @@ class Table
 	 * @param $name string name of Relationship
 	 * @param $strict bool
 	 * @throws RelationshipException
-	 * @return Relationship or null
+	 * @return HasOne|HasMany|BelongsTo Relationship or null
 	 */
 	public function get_relationship($name, $strict=false)
 	{
@@ -355,7 +397,9 @@ class Table
 		// than using instanceof but gud enuff for now
 		$quote_name = !($this->conn instanceof PgsqlAdapter);
 
-		$this->columns = $this->conn->columns($this->get_fully_qualified_table_name($quote_name));
+		$table_name = $this->get_fully_qualified_table_name($quote_name);
+		$conn = $this->conn;
+		$this->columns = Cache::get("get_meta_data-$table_name", function() use ($conn, $table_name) { return $conn->columns($table_name); });
 	}
 
 	/**
@@ -384,9 +428,10 @@ class Table
 		if (!$hash)
 			return $hash;
 
+		$date_class = Config::instance()->get_date_class();
 		foreach ($hash as $name => &$value)
 		{
-			if ($value instanceof \DateTime)
+			if ($value instanceof $date_class || $value instanceof \DateTime)
 			{
 				if (isset($this->columns[$name]) && $this->columns[$name]->type == Column::DATE)
 					$hash[$name] = $this->conn->date_to_string($value);
@@ -429,8 +474,25 @@ class Table
 			$this->table = $parts[count($parts)-1];
 		}
 
-		if(($db = $this->class->getStaticPropertyValue('db',null)) || ($db = $this->class->getStaticPropertyValue('db_name',null)))
+		if (($db = $this->class->getStaticPropertyValue('db',null)) || ($db = $this->class->getStaticPropertyValue('db_name',null)))
 			$this->db_name = $db;
+	}
+
+	private function set_cache()
+	{
+		if (!Cache::$adapter)
+			return;
+
+		$model_class_name = $this->class->name;
+		$this->cache_individual_model = $model_class_name::$cache;
+		if (property_exists($model_class_name, 'cache_expire') && isset($model_class_name::$cache_expire))
+		{
+			$this->cache_model_expire =  $model_class_name::$cache_expire;
+		}
+		else
+		{
+			$this->cache_model_expire = Cache::$options['expire'];
+		}
 	}
 
 	private function set_sequence_name()
@@ -444,16 +506,18 @@ class Table
 
 	private function set_associations()
 	{
-		require_once 'Relationship.php';
+		require_once __DIR__ . '/Relationship.php';
+		$namespace = $this->class->getNamespaceName();
 
 		foreach ($this->class->getStaticProperties() as $name => $definitions)
 		{
-			if (!$definitions || !is_array($definitions))
+			if (!$definitions)# || !is_array($definitions))
 				continue;
 
-			foreach ($definitions as $definition)
+			foreach (wrap_strings_in_arrays($definitions) as $definition)
 			{
 				$relationship = null;
+				$definition += array('namespace' => $namespace);
 
 				switch ($name)
 				{
@@ -526,22 +590,15 @@ class Table
 	}
 
 	/**
-	 * Builds the getters/setters array by prepending get_/set_ to the method names.
+	 * @deprecated Model.php now checks for get|set_ methods via method_exists so there is no need for declaring static g|setters.
 	 */
 	private function set_setters_and_getters()
 	{
-		$build = array('setters', 'getters');
+		$getters = $this->class->getStaticPropertyValue('getters', array());
+		$setters = $this->class->getStaticPropertyValue('setters', array());
 
-		foreach ($build as $type)
-		{
-			$methods = array();
-			$prefix = substr($type,0,3) . "_";
-
-			foreach ($this->class->getStaticPropertyValue($type,array()) as $method)
-				$methods[] = (substr($method,0,4) != $prefix ? "{$prefix}$method" : $method);
-
-			$this->class->setStaticPropertyValue($type,$methods);
-		}
+		if (!empty($getters) || !empty($setters))
+			trigger_error('static::$getters and static::$setters are deprecated. Please define your setters and getters by declaring methods in your model prefixed with get_ or set_. See
+			http://www.phpactiverecord.org/projects/main/wiki/Utilities#attribute-setters and http://www.phpactiverecord.org/projects/main/wiki/Utilities#attribute-getters on how to make use of this option.', E_USER_DEPRECATED);
 	}
-};
-?>
+}

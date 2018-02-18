@@ -73,6 +73,14 @@ class Config extends Singleton
 	private $logger;
 
 	/**
+	 * Contains the class name for the Date class to use. Must have a public format() method and a
+	 * public static createFromFormat($format, $time) method
+	 *
+	 * @var string
+	 */
+	private $date_class = 'ActiveRecord\\DateTime';
+
+	/**
 	 * The format to serialize DateTime values into.
 	 *
 	 * @var string
@@ -86,9 +94,9 @@ class Config extends Singleton
 	 *
 	 * <code>
 	 * ActiveRecord\Config::initialize(function($cfg) {
-     *   $cfg->set_model_directory('/path/to/your/model_directory');
-     *   $cfg->set_connections(array(
-     *     'development' => 'mysql://username:password@127.0.0.1/database_name'));
+	 *   $cfg->set_model_directory('/path/to/your/model_directory');
+	 *   $cfg->set_connections(array(
+	 *     'development' => 'mysql://username:password@127.0.0.1/database_name'));
 	 * });
 	 * </code>
 	 *
@@ -114,8 +122,8 @@ class Config extends Singleton
 	 *
 	 * <code>
 	 * $config->set_connections(array(
-     *     'development' => 'mysql://username:password@127.0.0.1/database_name'));
-     * </code>
+	 *     'development' => 'mysql://username:password@127.0.0.1/database_name'));
+	 * </code>
 	 *
 	 * @param array $connections Array of connections
 	 * @param string $default_connection Optionally specify the default_connection
@@ -194,13 +202,9 @@ class Config extends Singleton
 	 *
 	 * @param string $dir Directory path containing your models
 	 * @return void
-	 * @throws ConfigException if specified directory was not found
 	 */
 	public function set_model_directory($dir)
 	{
-		if (!file_exists($dir))
-			throw new ConfigException("Invalid or non-existent directory: $dir");
-
 		$this->model_directory = $dir;
 	}
 
@@ -208,9 +212,13 @@ class Config extends Singleton
 	 * Returns the model directory.
 	 *
 	 * @return string
+	 * @throws ConfigException if specified directory was not found
 	 */
 	public function get_model_directory()
 	{
+		if ($this->model_directory && !file_exists($this->model_directory))
+			throw new ConfigException('Invalid or non-existent directory: '.$this->model_directory);
+
 		return $this->model_directory;
 	}
 
@@ -262,27 +270,64 @@ class Config extends Singleton
 		return $this->logger;
 	}
 
-	/**
-	 * Returns the date format.
-	 *
-	 * @return string
-	 */
-	public function get_date_format()
+	public function set_date_class($date_class)
 	{
-		return $this->date_format;
+		try {
+			$klass = Reflections::instance()->add($date_class)->get($date_class);
+		} catch (\ReflectionException $e) {
+			throw new ConfigException("Cannot find date class");
+		}
+
+		if (!$klass->hasMethod('format') || !$klass->getMethod('format')->isPublic())
+			throw new ConfigException('Given date class must have a "public format($format = null)" method');
+
+		if (!$klass->hasMethod('createFromFormat') || !$klass->getMethod('createFromFormat')->isPublic())
+			throw new ConfigException('Given date class must have a "public static createFromFormat($format, $time)" method');
+
+		$this->date_class = $date_class;
+	}
+
+	public function get_date_class()
+	{
+		return $this->date_class;
 	}
 
 	/**
-	 * Sets the date format.
-	 *
-	 * Accepts date formats accepted by PHP's date() function.
-	 *
-	 * @link http://us.php.net/manual/en/function.date.php
-	 * @param string $format
+	 * @deprecated
+	 */
+	public function get_date_format()
+	{
+		trigger_error('Use ActiveRecord\Serialization::$DATETIME_FORMAT. Config::get_date_format() has been deprecated.', E_USER_DEPRECATED);
+		return Serialization::$DATETIME_FORMAT;
+	}
+
+	/**
+	 * @deprecated
 	 */
 	public function set_date_format($format)
 	{
-		$this->date_format = $format;
+		trigger_error('Use ActiveRecord\Serialization::$DATETIME_FORMAT. Config::set_date_format() has been deprecated.', E_USER_DEPRECATED);
+		Serialization::$DATETIME_FORMAT = $format;
 	}
-};
-?>
+
+	/**
+	 * Sets the url for the cache server to enable query caching.
+	 *
+	 * Only table schema queries are cached at the moment. A general query cache
+	 * will follow.
+	 *
+	 * Example:
+	 *
+	 * <code>
+	 * $config->set_cache("memcached://localhost");
+	 * $config->set_cache("memcached://localhost",array("expire" => 60));
+	 * </code>
+	 *
+	 * @param string $url Url to your cache server.
+	 * @param array $options Array of options
+	 */
+	public function set_cache($url, $options=array())
+	{
+		Cache::initialize($url,$options);
+	}
+}

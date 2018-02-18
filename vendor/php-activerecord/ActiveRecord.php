@@ -4,21 +4,28 @@ if (!defined('PHP_VERSION_ID') || PHP_VERSION_ID < 50300)
 
 define('PHP_ACTIVERECORD_VERSION_ID','1.0');
 
-require 'lib/Singleton.php';
-require 'lib/Config.php';
-require 'lib/Utils.php';
-require 'lib/DateTime.php';
-require 'lib/Model.php';
-require 'lib/Table.php';
-require 'lib/ConnectionManager.php';
-require 'lib/Connection.php';
-require 'lib/SQLBuilder.php';
-require 'lib/Reflections.php';
-require 'lib/Inflector.php';
-require 'lib/CallBack.php';
-require 'lib/Exceptions.php';
+if (!defined('PHP_ACTIVERECORD_AUTOLOAD_PREPEND'))
+	define('PHP_ACTIVERECORD_AUTOLOAD_PREPEND',true);
 
-spl_autoload_register('activerecord_autoload');
+require __DIR__.'/lib/Singleton.php';
+require __DIR__.'/lib/Config.php';
+require __DIR__.'/lib/Utils.php';
+require __DIR__.'/lib/DateTimeInterface.php';
+require __DIR__.'/lib/DateTime.php';
+require __DIR__.'/lib/Model.php';
+require __DIR__.'/lib/Table.php';
+require __DIR__.'/lib/ConnectionManager.php';
+require __DIR__.'/lib/Connection.php';
+require __DIR__.'/lib/Serialization.php';
+require __DIR__.'/lib/SQLBuilder.php';
+require __DIR__.'/lib/Reflections.php';
+require __DIR__.'/lib/Inflector.php';
+require __DIR__.'/lib/CallBack.php';
+require __DIR__.'/lib/Exceptions.php';
+require __DIR__.'/lib/Cache.php';
+
+if (!defined('PHP_ACTIVERECORD_AUTOLOAD_DISABLE'))
+	spl_autoload_register('activerecord_autoload',false,PHP_ACTIVERECORD_AUTOLOAD_PREPEND);
 
 function activerecord_autoload($class_name)
 {
@@ -39,6 +46,5 @@ function activerecord_autoload($class_name)
 	$file = "$root/$class_name.php";
 
 	if (file_exists($file))
-		require $file;
+		require_once $file;
 }
-?>

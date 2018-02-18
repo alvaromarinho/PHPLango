@@ -13,6 +13,9 @@ use PDO;
  */
 class SqliteAdapter extends Connection
 {
+
+	static $datetime_format = 'Y-m-d H:i:s';
+
 	protected function __construct($info)
 	{
 		if (!file_exists($info->host))
@@ -23,9 +26,9 @@ class SqliteAdapter extends Connection
 
 	public function limit($sql, $offset, $limit)
 	{
-		$offset = intval($offset);
+		$offset = is_null($offset) ? '' : intval($offset) . ',';
 		$limit = intval($limit);
-		return "$sql LIMIT $offset,$limit";
+		return "$sql LIMIT {$offset}$limit";
 	}
 
 	public function query_column_info($table)
@@ -41,11 +44,14 @@ class SqliteAdapter extends Connection
 	public function create_column($column)
 	{
 		$c = new Column();
-		$c->inflected_name	= Inflector::instance()->variablize($column['name']);
-		$c->name			= $column['name'];
-		$c->nullable		= $column['notnull'] ? false : true;
-		$c->pk				= $column['pk'] ? true : false;
-		$c->auto_increment	= $column['type'] == 'INTEGER' && $c->pk;
+		$c->inflected_name  = Inflector::instance()->variablize($column['name']);
+		$c->name            = $column['name'];
+		$c->nullable        = $column['notnull'] ? false : true;
+		$c->pk              = $column['pk'] ? true : false;
+		$c->auto_increment  = in_array(
+				strtoupper($column['type']),
+				array('INT', 'INTEGER')
+			) && $c->pk;
 
 		$column['type'] = preg_replace('/ +/',' ',$column['type']);
 		$column['type'] = str_replace(array('(',')'),' ',$column['type']);
@@ -77,5 +83,31 @@ class SqliteAdapter extends Connection
 
 		return $c;
 	}
-};
+
+	public function set_encoding($charset)
+	{
+		throw new ActiveRecordException("SqliteAdapter::set_charset not supported.");
+	}
+
+	public function accepts_limit_and_order_for_update_and_delete() { return true; }
+
+	public function native_database_types()
+	{
+		return array(
+			'primary_key' => 'integer not null primary key',
+			'string' => array('name' => 'varchar', 'length' => 255),
+			'text' => array('name' => 'text'),
+			'integer' => array('name' => 'integer'),
+			'float' => array('name' => 'float'),
+			'decimal' => array('name' => 'decimal'),
+			'datetime' => array('name' => 'datetime'),
+			'timestamp' => array('name' => 'datetime'),
+			'time' => array('name' => 'time'),
+			'date' => array('name' => 'date'),
+			'binary' => array('name' => 'blob'),
+			'boolean' => array('name' => 'boolean')
+		);
+	}
+
+}
 ?>

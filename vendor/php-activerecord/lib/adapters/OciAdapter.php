@@ -16,10 +16,13 @@ class OciAdapter extends Connection
 	static $QUOTE_CHARACTER = '';
 	static $DEFAULT_PORT = 1521;
 
+	public $dsn_params;
+
 	protected function __construct($info)
 	{
 		try {
-			$this->connection = new PDO("oci:dbname=//$info->host/$info->db",$info->user,$info->pass,static::$PDO_OPTIONS);
+			$this->dsn_params = isset($info->charset) ? ";charset=$info->charset" : "";
+			$this->connection = new PDO("oci:dbname=//$info->host/$info->db$this->dsn_params",$info->user,$info->pass,static::$PDO_OPTIONS);
 		} catch (PDOException $e) {
 			throw new DatabaseException($e);
 		}
@@ -117,5 +120,27 @@ class OciAdapter extends Connection
 
 		return $c;
 	}
-};
+
+	public function set_encoding($charset)
+	{
+		// is handled in the constructor
+	}
+
+	public function native_database_types()
+	{
+		return array(
+			'primary_key' => "NUMBER(38) NOT NULL PRIMARY KEY",
+			'string' => array('name' => 'VARCHAR2', 'length' => 255),
+			'text' => array('name' => 'CLOB'),
+			'integer' => array('name' => 'NUMBER', 'length' => 38),
+			'float' => array('name' => 'NUMBER'),
+			'datetime' => array('name' => 'DATE'),
+			'timestamp' => array('name' => 'DATE'),
+			'time' => array('name' => 'DATE'),
+			'date' => array('name' => 'DATE'),
+			'binary' => array('name' => 'BLOB'),
+			'boolean' => array('name' => 'NUMBER', 'length' => 1)
+		);
+	}
+}
 ?>
