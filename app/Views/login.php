@@ -15,6 +15,7 @@
 		<?php require_once ELEMENTS.'message.php'; ?>
 		<form class="form-signin" method="post" action="<?= ROOT ?>">
 			<h2 class="form-signin-heading">Please sign in</h2>
+			<input type="hidden" name="_auth">
 			<label for="username" class="sr-only">Email address</label>
 			<input type="text" id="username" name="username" class="form-control" placeholder="Email address" required autofocus>
 			<label for="password" class="sr-only">Password</label>
