@@ -41,6 +41,18 @@ label.radio {
 .sidebar .nav-item .nav-link {
   border-radius: 0;
 }
+.sidebar .nav-link:hover {
+  background-color: #ddd;
+}
+
+/* NAVBAR */
+.navbar .nav-link {
+  color: #fff;
+}
+.navbar .nav-link:hover {
+  color: #fff;
+  background-color: #495057;
+}
 
 /* BUTTON */
 .btn {

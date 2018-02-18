@@ -6,8 +6,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" href="<?= IMG.'icon.png' ?>" />
 	<!--[if IE]><link rel="shortcut icon" href="<?= IMG.'icon.ico' ?>"><![endif]-->
-	<link rel="stylesheet" href="<?= CSS.'PHPLango.css' ?>">
 	<link rel="stylesheet" href="<?= CSS.'bootstrap.min.css' ?>">
+	<link rel="stylesheet" href="<?= CSS.'PHPLango.css' ?>">
 </head>
 <body>
 	<?php require_once ELEMENTS."navbar.php"; ?>

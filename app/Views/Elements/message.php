@@ -6,6 +6,6 @@ if(isset($_SESSION['message'])) {
 			"<button type='button' class='close' data-dismiss='alert'>&times;</button>".
 			$_SESSION['message'].
 		"</div>";
-	unset($_SESSION['message']);
-	unset($_SESSION['class']);
 } 
+unset($_SESSION['message']);
+unset($_SESSION['class']);

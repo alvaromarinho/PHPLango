@@ -6,7 +6,7 @@ $.fn.Lmodal = function(args) {
 		lg: null,
 		title: 'Aguarde',
 		body: 'Carregando...',
-		footer: '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+		footer: '<button type="button" class="btn btn-light" data-dismiss="modal">Close</button>',
 		html: null
 	}
 	settings = $.extend(defaults, args);
