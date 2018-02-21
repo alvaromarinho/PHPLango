@@ -2,7 +2,7 @@
 
 if (!isset($_SESSION)) { session_start(); }
 
-error_reporting(E_ERROR | E_PARSE | E_NOTICE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_USER_ERROR | E_USER_WARNING | E_USER_NOTICE | E_STRICT | E_RECOVERABLE_ERROR);
+error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 header('Content-Type: text/html; charset=utf-8'); 
@@ -17,12 +17,13 @@ require_once "../vendor/Template.class.php";
 require_once "../vendor/Auth.class.php";
 
 $_mvc = Mvc::getInstance();
-$_url = $_SERVER['REQUEST_URI']; /* /project/controller/action/parameters */
+$_url = $_SERVER['REQUEST_URI'];
 $_url = explode("/", trim($_url, "/"));
 
 if(PHPLango::checkUrl($_mvc, $_url))
 	if(Auth::login())
 		if(empty($_url[1]))
+		// if(empty($_url[0]))
 			require_once VIEWS."start.php";
 		else
 			PHPLango::redirect($_mvc, $_url);
