@@ -19,6 +19,9 @@ $.fn.Lmodal = function(args) {
 		if(settings.html != null) {
 			$.ajax({
 				url: settings.html,
+				beforeSend: function() {
+	                modal.find('.modal-body').html('<div align="center"><img src="img/load.gif"></div>');
+	            },
 				success: function(html){
 					modal.find('.modal-body').html(html);
 				}

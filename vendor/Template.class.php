@@ -100,6 +100,8 @@ class Template
 		$options    = $config['options'] ?: array();
 		$html_label = self::_label($name, $config['label']);
 		$html_attr  = self::_attributes($attr);
+		$disabled   = null;
+		$selected   = null;
 
 		$html = $html_label."<select ".$html_attr." id='".$name."' name='".$name."'>";
 

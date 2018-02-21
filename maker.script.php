@@ -47,7 +47,7 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 	</head>
 	<body>
 		<nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
-			<a class="navbar-brand" href="<?= ROOT ?>"><?= PROJECT ?></a>
+			<a class="navbar-brand" href="<?= ROOT ?>">PHPLango</a>
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
 				<span class="navbar-toggler-icon"></span>
 			</button>
