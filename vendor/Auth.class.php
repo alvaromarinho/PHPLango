@@ -1,17 +1,18 @@
 <?php 
 
+require_once "php-jwt/BeforeValidException.php";
+require_once "php-jwt/ExpiredException.php";
+require_once "php-jwt/SignatureInvalidException.php";
+require_once "php-jwt/JWT.php";
+
+use \Firebase\JWT\JWT;
+
 class Auth
 {
-	function __construct()
-	{
-		ini_set('session.use_cookies', 1);
-		ini_set('session.use_only_cookies', 1);
-		ini_set('session.use_trans_sid', 0);
-	}
+	private static $key = "SUA_KEY";
 	
 	public static function login()
 	{
-
 		/* SE EXISTE O MODEL USER */
 		if(!class_exists('User') && !empty($_POST)){
 			$_SESSION["message"] = "Model Users not found!";
@@ -19,13 +20,19 @@ class Auth
 		}
 
 		/* REALIZANDO A AUTENTICAÇÃO */
-		else if(isset($_POST['_auth'])) {
-			$user = User::first(['select' => 'id, username, password', 'conditions' => ['username = ?', $_POST['username'] ]]);
-			if (crypt($_POST['password'], $user->password) == $user->password) {
-				$_SESSION['auth']    = true;
-				$_SESSION['email']   = $user->username;
+		else if(isset($_POST['auth'])) {
+			$user = User::first(['select' => 'id, password', 'conditions' => ['username = ?', $_POST['username'] ]]);
+			if (isset($user) && crypt($_POST['password'], $user->password) == $user->password) {
+				$config = array(
+					"iat"  => time(), 					// time when the token was generated
+			        "exp"  => time() + 60*60* 8,        // time when the token was expired	
+					"iss"  => $_SERVER['SERVER_NAME'],	// A string containing the name or identifier of the application
+				);
+
+				$token = JWT::encode($config, self::$key, 'HS512');
+				$_SESSION['auth'] 	 = true;
 				$_SESSION['user_id'] = $user->id;
-				setcookie('PHPLAP', bin2hex($user->password), time()+60*60*1, '/'.PROJECT);
+				setcookie('PHPLango', bin2hex($token), time() + 60*60* 8);
 				return true;
 			} else {
 				$_SESSION["message"] = "Wrong username or password!";
@@ -34,27 +41,25 @@ class Auth
 		}
 
 		/* VERIFICANDO A AUTENTICAÇÃO */
-		else if(isset($_SESSION['auth'])){
-			if(isset($_COOKIE['PHPLAP'])) {
-				$user = User::first(['select' => 'id, username, password', 'conditions' => ['username = ?', $_SESSION['email']] ]);
-				if($user->password == hex2bin($_COOKIE['PHPLAP'])) {
-					setcookie('PHPLAP', bin2hex($user->password), time()+60*60*1, '/'.PROJECT);
-					return true;
-				} 
-			} else {
+		else if(isset($_SESSION['auth']) && isset($_COOKIE['PHPLango'])){
+			$token = hex2bin($_COOKIE['PHPLango']);
+			try {
+				JWT::decode($token, self::$key, array('HS512'));
+				return true;
+			} catch (\Firebase\JWT\ExpiredException $e) {
 				$_SESSION["message"] = "Authentication error occurred!";
 				$_SESSION["class"]   = "danger";
-				self::logoff(false);
 			}
-		}
+		} 
 
+		self::logoff(false);
 		return false;
 	}
 
 	public static function logoff($redirect = true)
 	{
-		unset($_SESSION['auth'], $_SESSION['email'], $_SESSION['user_id']);
-		setcookie('PHPLAP', '', 1);
+		setcookie('PHPLango', '', 1);
+		unset($_SESSION['auth'], $_SESSION['user_id']);
 		if($redirect)
 			header("location:".ROOT);
 	}
@@ -62,9 +67,8 @@ class Auth
 	public static function cryptPass($password)
 	{
 		$salt      = uniqid();
-		$algo      = '6'; // CRYPT_SHA512
 		$rounds    = '5042';
-		$cryptSalt = '$'.$algo.'$rounds='.$rounds.'$'.$salt.'$';
+		$cryptSalt = '$6$rounds='.$rounds.'$'.$salt.'$';
 		return crypt($password, $cryptSalt);
 	}
 }
