@@ -166,9 +166,8 @@ class Template
 		if(isset($attr['class'])){
 			$class = $attr['class'];
 			unset($attr['class']);
-		} else {
+		} else
 			$class = '';
-		}
 		if(isset($attr['type']))
 			unset($attr['type']);
 		$html_attr = self::_attributes($attr);
@@ -205,8 +204,8 @@ class Template
 		else
 			$label = ucwords(str_replace("_", " ", $name));
 		$html 	   = ($config['inline'] == true) 
-			? "<label class='radio'><input type='radio' name='".$name."'>".$label."</label>"
-			: "<div class='radio'><label class='radio-inline'><input type='radio' ".$html_attr." name='".$name."'>".$label."</label></div>";
+			? "<label class='radio-inline'><input type='radio' ".$html_attr." name='".$name."'>".$label."</label>"
+			: "<div class='radio'><label><input type='radio' ".$html_attr." name='".$name."'>".$label."</label></div>";
 		return $html;
 	}
 
