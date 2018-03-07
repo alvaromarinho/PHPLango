@@ -4,22 +4,15 @@ class PHPLango
 {
 	public static function checkUrl($_mvc, $_url)
 	{
-		if(!isset($_url[1]) && $_url[0] == PROJECT)
-		// if($_url[0] == '')
+		if(empty($_url[0]))
 			return true;
-		elseif (isset($_url[1]) && $_url[1] == 'logoff')
-		// elseif (isset($_url[0]) && $_url[0] == 'logoff')
+		elseif (isset($_url[0]) && $_url[0] == 'logoff')
 			Auth::logoff();
 		else {
-			$_mvc->setViewFolder(ActiveRecord\classify($_url[1]));
-			$_mvc->setModel(ActiveRecord\classify($_url[1], true));
+			$_mvc->setViewFolder(ActiveRecord\classify($_url[0]));
+			$_mvc->setModel(ActiveRecord\classify($_url[0], true));
 			$_mvc->setController($_mvc->getViewFolder()."Controller");
-			$_mvc->setAction(isset($_url[2]) && !empty($_url[2]) ? $_url[2] : "index");
-
-			// $_mvc->setViewFolder(ActiveRecord\classify($_url[0]));
-			// $_mvc->setModel(ActiveRecord\classify($_url[0], true));
-			// $_mvc->setController($_mvc->getViewFolder()."Controller");
-			// $_mvc->setAction(isset($_url[1]) && !empty($_url[1]) ? $_url[1] : "index");
+			$_mvc->setAction(isset($_url[1]) && !empty($_url[1]) ? $_url[1] : "index");
 
 			if (!empty($_mvc->getController()) && file_exists(CONTROLLERS.$_mvc->getController().".php")){
 				if(file_exists(MODELS.$_mvc->getModel().".php")) {
@@ -39,19 +32,16 @@ class PHPLango
 
 	public static function redirect($_mvc, $_url)
 	{
-		if(isset($_url[3]))
-			$_mvc->setParameters($_url[3]);
-
-		// if(isset($_url[2]))
-		// 	$_mvc->setParameters($_url[2]);
+		if(isset($_url[2]))
+		 	$_mvc->setParameters($_url[2]);
 		
 		require_once CONTROLLERS.$_mvc->getController().".php";
 
 		try{
-			$_controller = $_mvc->getController();
-			$_action 	 = $_mvc->getAction();
-			$_parameters = $_mvc->getParameters();
-			$_result 	 = $_controller::$_action($_parameters);
+			$_controller 	= $_mvc->getController();
+			$_action 	= $_mvc->getAction();
+			$_parameters 	= $_mvc->getParameters();
+			$_result 	= $_controller::$_action($_parameters);
 			unset($_controller, $_action, $_parameters, $_url);
 		} catch (Exception $e) {
 			return array("title" => "Erro", "message" => $e->getMessage());
