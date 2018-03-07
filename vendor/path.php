@@ -6,7 +6,10 @@ define('DS', DIRECTORY_SEPARATOR);
 define('PROJECT', end($arrayDir));
 define('PROTOCOL', isset($_SERVER['HTTPS']) ? 'https://' : 'http://');
 
+/* PROD */
 // define('ROOT', '/');
+
+/* DEV */
 define('SERVER', PROTOCOL.substr($_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'], 0, strpos($_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'], PROJECT)-1));
 define('ROOT', SERVER.DS.PROJECT.DS);
 
