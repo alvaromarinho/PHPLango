@@ -9,16 +9,16 @@ require_once 'vendor/php-activerecord/ActiveRecord.php';
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
-$user       = 'root';
-$password   = '';
-$database   = 'blog';
-$server     = 'localhost';
+$user       	= 'root';
+$password   	= '';
+$database   	= 'phplango';
+$server     	= 'localhost';
 
 $maker 		= new Maker();
 
-$mod        = 0777;
-$project    = strtolower(PROJECT);
-$sidebar    = '';
+$mod        	= 0777;
+$project    	= strtolower(PROJECT);
+$sidebar    	= '';
 
 $connection = new mysqli($server, $user, $password, $database);
 if (mysqli_connect_errno()) {
@@ -37,12 +37,15 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 		<title>Maker - <?= PROJECT ?></title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="icon" href="<?= IMG.'icon.png' ?>" />
-		<!--[if IE]><link rel="shortcut icon" href="<?= IMG.'icon.ico' ?>"><![endif]-->
+		<link rel="icon" href="<?= 'img/icon.png' ?>" />
+		<!--[if IE]><link rel="shortcut icon" href="<?= 'img/icon.ico' ?>"><![endif]-->
 		<link rel="stylesheet" href="<?= CSS.'PHPLango.css' ?>">
 		<link rel="stylesheet" href="<?= CSS.'bootstrap.min.css' ?>">
+
 		<style>
-			.font {font-size: 2rem; font-weight: 300; line-height: 1.2; margin: 0;}
+			.btn input[type=checkbox] { position: absolute; clip: rect(0,0,0,0); pointer-events: none; }
+			.card .bg-dark { color: #fff; }
+			.btn-checkbox label { margin-bottom: 0px; }
 		</style>
 	</head>
 	<body>
@@ -63,57 +66,70 @@ while ($result = $query->fetch_array(MYSQLI_ASSOC))
 				</div>
 			</div>
 
-			<div class="row my-3 mx-1">
-				<div class="col-12">
-					<p class="font">Tables:</p>
-				</div>
-			</div>
-
 			<form method="post" action="">
-				<div class="row m-3">
-					<?php foreach ($tables as $table) { 
-						echo "<div class='col-2 border px-3 py-2'><input type='checkbox' name='".$table['name']."' checked>".ucwords($table['name'])."</div>"; 
-					} ?>
-				</div>
-					
-				<div class="row my-3 mx-1">
+
+				<div class="form-group row">
 					<div class="col-12">
-						<div class="form-group row">
-							<label for="overwriteFiles" class="col-5 font">Overwrite files:</label>
-							<div class="col-2">
-								<select class="form-control" name="overwriteFiles" id="overwriteFiles">
-									<option value="N">NO</option>
-									<option value="Y">YES</option>
-								</select>
+						<div class="card border-dark">
+							<div class="card-header bg-dark">Tables</div>
+							<div class="card-body">
+								<div class="btn-checkbox" data-toggle="buttons">
+									<div class="row">
+										<?php foreach ($tables as $table) { 
+											echo "<div class='col-3'><label class='btn btn-outline-secondary btn-block'><input type='checkbox' name='tables[]' id='".$table['name']."' value='".$table['name']."'>".ucwords($table['name'])."</label></div>"; 
+										} ?>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="row my-3 mx-1">
-					<div class="col-12">
-						<div class="form-group row">
-							<label for="overwriteAdminPass" class="col-5 font">Overwrite ADMIN password:</label>
-							<div class="col-2">
-								<select class="form-control" name="overwriteAdminPass" id="overwriteAdminPass">
-									<option value="N">NO</option>
-									<option value="Y">YES</option>
-								</select>
+
+				<div class="form-group row">
+					<div class="col-6">
+						<div class="card border-dark">
+							<div class="card-header bg-dark">Create/Overwrite</div>
+							<div class="card-body">
+								<div class="btn-checkbox" data-toggle="buttons">
+									<div class="row">
+										<div class="col-4">
+											<label class='btn btn-outline-secondary btn-block' for="overwriteControllers">
+												<input type='checkbox' name="overwriteControllers" id="overwriteControllers">Controllers
+											</label>
+										</div>
+										<div class="col-4">
+											<label class='btn btn-outline-secondary btn-block' for="overwriteModels">
+												<input type='checkbox' name="overwriteModels" id="overwriteModels">Models
+											</label>
+										</div>
+										<div class="col-4">
+											<label class='btn btn-outline-secondary btn-block' for="overwriteViews">
+												<input type='checkbox' name="overwriteViews" id="overwriteViews">Views
+											</label>
+										</div>
+									</div>
+								</div>
 							</div>
-							<div class="col-5">
-								<input type="text" name="adminPass" class="form-control" placeholder="password">
+						</div>
+					</div>
+					<div class="col-6">
+						<div class="card border-dark">
+							<div class="card-header bg-dark">Change ADMIN's password</div>
+							<div class="card-body">
+								<input type="password" name="adminPass" class="form-control" placeholder="Password">
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="row my-3 mx-1">
-					<div class="col-12">
-						<div class="form-group row">
-							<div class="col-1 text-center">
-								<button class="btn btn-primary btn-block">Make</button>
-							</div>
+
+				<div class="form-group row">
+					<div class="col-12 mb-3">
+						<div class="col-2 offset-5 text-center">
+							<button class="btn btn-lg btn-primary btn-block">MAKE</button>
 						</div>
 					</div>
 				</div>
+
 			</form>
 
 		</div>
@@ -139,14 +155,14 @@ if(!empty($_POST)){
 		$null          = array();
 
 		$query    = "SELECT 
-						column_name     AS 'field', 
-						column_default  AS 'default', 
-						is_nullable     AS 'null',  
-						column_type     AS 'type', 
-						column_key      AS 'key', 
-						column_comment  AS 'comment'
-					FROM information_schema.columns 
-					WHERE table_name = '".$table['name']."' AND table_schema = SCHEMA()";
+					column_name     AS 'field', 
+					column_default  AS 'default', 
+					is_nullable     AS 'null',  
+					column_type     AS 'type', 
+					column_key      AS 'key', 
+					column_comment  AS 'comment'
+				FROM information_schema.columns 
+				WHERE table_name = '".$table['name']."' AND table_schema = SCHEMA()";
 		$query  = $connection->query($query);
 		while ($result = $query->fetch_array(MYSQLI_ASSOC))
 			$describe[] = (object) $result;
@@ -168,58 +184,61 @@ if(!empty($_POST)){
 			}
 		}
 
-		if(isset($_POST[$table['name']])) {
+		if(in_array($table['name'], $_POST['tables'])) {
+
 			/* CONTROLLER */
-			$controller_config = array(
-				'name'         => $controller_name,
-				'model'        => $model_name,
-				'table'        => $table['name'],
-				'relationship' => $table_columns
-			);
-			if(!file_exists(CONTROLLERS.$controller_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
+			if(isset($_POST['overwriteControllers'])) {
+				$controller_config = array(
+					'name'         => $controller_name,
+					'model'        => $model_name,
+					'table'        => $table['name'],
+					'relationship' => $table_columns
+				);
+				
 				$maker->setHtmlController($controller_config);
 				file_put_contents(CONTROLLERS.$controller_name.'.php', $maker->getHtmlController());
 				chmod(CONTROLLERS.$controller_name.'.php', $mod);
 			}
 
-			/* VIEW */
-			$view_config = array(
-				'columns' => $describe,
-				'model'   => $model_name,
-				'table'   => $table['name'],
-			);
-			if(!is_dir(VIEWS.$view_folder_name))
-				mkdir(VIEWS.$view_folder_name, $mod);
-			chmod(VIEWS.$view_folder_name, $mod);
+			/* MODEL */
+			if(isset($_POST['overwriteModels'])) {
+				$relationship = json_decode($table['relationship'], true) ?: array();
+				$model_config = array(
+					'name'         => $model_name,
+					'relationship' => $relationship,
+					'null'         => $null
+				);
+				
+				$maker->setHtmlModel($model_config);
+				file_put_contents(MODELS.$model_name.'.php', $maker->getHtmlModel());
+				chmod(MODELS.$model_name.'.php', $mod);	
+			}
 
-			/* index */
-			if(!file_exists(VIEWS.$view_folder_name.DS.'index.php') || $_POST['overwriteFiles'] == 'Y') {
+			/* VIEW */
+			if(isset($_POST['overwriteViews'])) {
+				$view_config = array(
+					'columns' => $describe,
+					'model'   => $model_name,
+					'table'   => $table['name'],
+				);
+				if(!is_dir(VIEWS.$view_folder_name))
+					mkdir(VIEWS.$view_folder_name, $mod);
+				chmod(VIEWS.$view_folder_name, $mod);
+
+				/* index */
 				$maker->setHtmlIndex($view_config);
 				file_put_contents(VIEWS.$view_folder_name.DS.'index.php', $maker->getHtmlIndex());
 				chmod(VIEWS.$view_folder_name.DS.'index.php', $mod);
-			}
 
-			/* create */
-			if(!file_exists(VIEWS.$view_folder_name.DS.'create.php') || $_POST['overwriteFiles'] == 'Y') {
+				/* create */
 				$maker->setHtmlCreate($view_config);
 				file_put_contents(VIEWS.$view_folder_name.DS.'create.php', $maker->getHtmlCreate());
 				chmod(VIEWS.$view_folder_name.DS.'create.php', $mod);
 			}
 
+			/* SIDEBAR */
 			$maker->setHtmlSidebar($table['name']);
 			$sidebar .= $maker->getHtmlSidebar();
-		}
-
-		/* MODEL */
-		$relationship = json_decode($table['relationship'], true) ?: array();
-		$model_config = array(
-			'name'         => $model_name,
-			'relationship' => $relationship,
-			'null'         => $null
-		);
-		if(!file_exists(MODELS.$model_name.'.php') || $_POST['overwriteFiles'] == 'Y') {
-			$maker->setHtmlModel($model_config);
-			file_put_contents(MODELS.$model_name.'.php', $maker->getHtmlModel());
 		}
 		
 		/* DELETING EMPTY FILES */
@@ -237,11 +256,11 @@ if(!empty($_POST)){
 	$query  = $connection->query($query);
 	$result = $query->fetch_array(MYSQLI_ASSOC);
 
-	if($result && $_POST['overwriteAdminPass'] == 'Y') {
+	if(!empty($_POST['adminPass'])) {
 		$query  =  "UPDATE users SET password = '".Auth::cryptPass($_POST['adminPass'])."' WHERE username = 'admin'";
 		$query  = $connection->query($query);
 	}
 
 	$connection->close();
-	header("location:".ROOT);
+	echo "<script>alert('Maker executed successfully!')</script>";
 } 
