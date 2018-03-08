@@ -2,17 +2,17 @@
 
 class PHPLango
 {
-	public static function checkUrl($_mvc, $_url)
+	public static function checkUrl($_mvc, $_uri)
 	{
-		if(empty($_url[0]))
+		if(empty($_uri[0]))
 			return true;
-		elseif (isset($_url[0]) && $_url[0] == 'logoff')
+		elseif (isset($_uri[0]) && $_uri[0] == 'logoff')
 			Auth::logoff();
 		else {
-			$_mvc->setViewFolder(ActiveRecord\classify($_url[0]));
-			$_mvc->setModel(ActiveRecord\classify($_url[0], true));
+			$_mvc->setViewFolder(ActiveRecord\classify($_uri[0]));
+			$_mvc->setModel(ActiveRecord\classify($_uri[0], true));
 			$_mvc->setController($_mvc->getViewFolder()."Controller");
-			$_mvc->setAction(isset($_url[1]) && !empty($_url[1]) ? $_url[1] : "index");
+			$_mvc->setAction(isset($_uri[1]) && !empty($_uri[1]) ? $_uri[1] : "index");
 
 			if (!empty($_mvc->getController()) && file_exists(CONTROLLERS.$_mvc->getController().".php")){
 				if(file_exists(MODELS.$_mvc->getModel().".php")) {
@@ -30,10 +30,10 @@ class PHPLango
 		return false;
 	}
 
-	public static function redirect($_mvc, $_url)
+	public static function redirect($_mvc, $_uri)
 	{
-		if(isset($_url[2]))
-		 	$_mvc->setParameters($_url[2]);
+		if(isset($_uri[2]))
+		 	$_mvc->setParameters($_uri[2]);
 		
 		require_once CONTROLLERS.$_mvc->getController().".php";
 
@@ -42,7 +42,7 @@ class PHPLango
 			$_action 	= $_mvc->getAction();
 			$_parameters 	= $_mvc->getParameters();
 			$_result 	= $_controller::$_action($_parameters);
-			unset($_controller, $_action, $_parameters, $_url);
+			unset($_controller, $_action, $_parameters, $_uri);
 		} catch (Exception $e) {
 			return array("title" => "Erro", "message" => $e->getMessage());
 		}
