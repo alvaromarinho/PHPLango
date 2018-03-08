@@ -17,16 +17,16 @@ require_once "../vendor/Template.class.php";
 require_once "../vendor/Auth.class.php";
 
 $_mvc = Mvc::getInstance();
-// $_url = str_replace("/PHPLango", "", $_SERVER['REQUEST_URI']);
-$_url = $_SERVER['REQUEST_URI'];
-$_url = explode("/", trim($_url, "/"));
+// $_uri = str_replace("/PHPLango", "", $_SERVER['REQUEST_URI']);
+$_uri = $_SERVER['REQUEST_URI'];
+$_uri = explode("/", trim($_uri, "/"));
 
-if(PHPLango::checkUrl($_mvc, $_url))
+if(PHPLango::checkUrl($_mvc, $_uri))
 	if(Auth::login())
-		if(empty($_url[0]))
+		if(empty($_uri[0]))
 			require_once VIEWS."start.php";
 		else
-			PHPLango::redirect($_mvc, $_url);
+			PHPLango::redirect($_mvc, $_uri);
 	else
 		require_once VIEWS."login.php";
 else
