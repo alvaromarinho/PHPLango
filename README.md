@@ -1,6 +1,7 @@
 # PHPLango
 a fento-framework PHP
 
-obs: when you download the project, rename the <strong>a.htaccess</strong> files to <strong>.htaccess</strong> in the <em>PHPLango/</em> and <em>PHPLango/public/</em>
+##Attemption
+Rename the `a.htaccess` files to `.htaccess` in the `PHPLango/` and `PHPLango/public/`
 
-<a href="http://phplango.alvaromarinho.com.br/" title="PHPLango Docs">Documentation</a> (pt_BR)
+[Documentation (pt_BR)](http://phplango.alvaromarinho.com.br/)
